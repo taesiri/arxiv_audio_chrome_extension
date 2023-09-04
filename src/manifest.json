@@ -6,10 +6,15 @@
   "permissions": [
     "activeTab"
   ],
+  "host_permissions": [
+    "https://arxiv.org/*",
+    "https://huggingface.co/*"
+  ],
   "content_scripts": [
     {
       "matches": [
-        "https://arxiv.org/abs/*"
+        "https://arxiv.org/abs/*",
+        "https://huggingface.co/papers/*"
       ],
       "js": [
         "content.js"

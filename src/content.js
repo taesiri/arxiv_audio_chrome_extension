@@ -1,39 +1,66 @@
-// content.js
-
-const insertAudioPlayer = () => {
-  // Extract the arXiv paper ID from the current URL
+const insertAudioPlayerForArxiv = () => {
   const paperID = window.location.pathname.split('/abs/')[1];
-
-  // Form the audio URL based on the paper ID
   const audioURL = `https://huggingface.co/datasets/taesiri/arxiv_audio/resolve/main/audio/${paperID}.mp3`;
 
-  // Create the audio player element
   const audioElement = document.createElement('audio');
   audioElement.controls = true;
   audioElement.src = audioURL;
-
-  // Style the audio player
-  audioElement.style.width = '100%';  // Set the width to 100% of its container
-  audioElement.style.height = '32px'; // Set a slim height
+  audioElement.style.width = '100%';
+  audioElement.style.height = '32px';
   audioElement.style.marginTop = '10px';
   audioElement.style.marginBottom = '10px';
 
-  // Check if the audio file exists before inserting it
   fetch(audioURL, { method: 'HEAD' }).then(response => {
     if (response.ok) {
-      // Find the abstract's blockquote element
       const abstractElement = document.querySelector('blockquote.abstract.mathjax');
-
-      // If found, insert the audio player after the blockquote element
       if (abstractElement) {
         abstractElement.parentNode.insertBefore(audioElement, abstractElement.nextSibling);
       }
     }
-  }).catch(error => {
-    // Handle any errors, like network issues, here
-    console.error('Error fetching the audio:', error);
   });
 };
 
-// Call the function to insert the audio player
-insertAudioPlayer();
+const insertAudioPlayerForHuggingface = () => {
+  const paperID = window.location.pathname.split('/papers/')[1];
+  const audioURL = `https://huggingface.co/datasets/taesiri/arxiv_audio/resolve/main/audio/${paperID}.mp3`;
+
+  const audioElement = document.createElement('audio');
+  audioElement.controls = true;
+  audioElement.src = audioURL;
+  audioElement.style.width = '100%';
+  audioElement.style.height = '32px';
+  audioElement.style.marginTop = '10px';
+  audioElement.style.marginBottom = '10px';
+
+  const insertAudioIfMissing = () => {
+    fetch(audioURL, { method: 'HEAD' }).then(response => {
+      if (response.ok) {
+        const abstractElement = document.querySelector('div.pb-8 > p.text-gray-700');
+        if (abstractElement && !document.contains(audioElement)) {
+          abstractElement.parentNode.insertBefore(audioElement, abstractElement.nextSibling);
+        }
+      }
+    });
+  };
+
+  // Insert the audio player initially
+  insertAudioIfMissing();
+
+  // Set up a mutation observer to watch for changes to the abstract section
+  const targetNode = document.querySelector('div.pb-8');
+  if (targetNode) {
+    const observerOptions = {
+      childList: true,
+      subtree: true
+    };
+
+    const observer = new MutationObserver(insertAudioIfMissing);
+    observer.observe(targetNode, observerOptions);
+  }
+};
+
+if (window.location.hostname === 'arxiv.org') {
+  insertAudioPlayerForArxiv();
+} else if (window.location.hostname === 'huggingface.co') {
+  insertAudioPlayerForHuggingface();
+}
